@@ -1,10 +1,83 @@
 from pymodbus.client import ModbusTcpClient
-from pymodbus.exceptions import ModbusException
+from pymodbus.exceptions import ModbusException, ConnectionException
 import logging
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+# Remote metering metadata (addresses 201-226) from PCS protocol Table 4.3
+REMOTE_METERING_FIELDS = [
+    {"address": 201, "key": "voltage_a", "name": "Phase A voltage of PCS port", "data_type": "U16", "coefficient": 0.1, "unit": "V", "signed": False},
+    {"address": 202, "key": "voltage_b", "name": "Phase B voltage of PCS port", "data_type": "U16", "coefficient": 0.1, "unit": "V", "signed": False},
+    {"address": 203, "key": "voltage_c", "name": "Phase C voltage of PCS port", "data_type": "U16", "coefficient": 0.1, "unit": "V", "signed": False},
+    {"address": 204, "key": "current_a", "name": "Phase A current of PCS output", "data_type": "S16", "coefficient": 0.1, "unit": "A", "signed": True},
+    {"address": 205, "key": "current_b", "name": "Phase B current of PCS output", "data_type": "S16", "coefficient": 0.1, "unit": "A", "signed": True},
+    {"address": 206, "key": "current_c", "name": "Phase C current of PCS output", "data_type": "S16", "coefficient": 0.1, "unit": "A", "signed": True},
+    {"address": 207, "key": "frequency", "name": "Grid frequency", "data_type": "U16", "coefficient": 0.01, "unit": "Hz", "signed": False},
+    {"address": 208, "key": "active_power_a", "name": "Active power of phase A output of PCS", "data_type": "S16", "coefficient": 0.1, "unit": "kW", "signed": True},
+    {"address": 209, "key": "active_power_b", "name": "Active power of phase B output of PCS", "data_type": "S16", "coefficient": 0.1, "unit": "kW", "signed": True},
+    {"address": 210, "key": "active_power_c", "name": "Active power of phase C output of PCS", "data_type": "S16", "coefficient": 0.1, "unit": "kW", "signed": True},
+    {"address": 211, "key": "active_power_total", "name": "Active power of total output of PCS", "data_type": "S16", "coefficient": 0.1, "unit": "kW", "signed": True},
+    {"address": 212, "key": "reactive_power_a", "name": "Reactive power of phase A output of PCS", "data_type": "S16", "coefficient": 0.1, "unit": "kVar", "signed": True},
+    {"address": 213, "key": "reactive_power_b", "name": "Reactive power of phase B output of PCS", "data_type": "S16", "coefficient": 0.1, "unit": "kVar", "signed": True},
+    {"address": 214, "key": "reactive_power_c", "name": "Reactive power of phase C output of PCS", "data_type": "S16", "coefficient": 0.1, "unit": "kVar", "signed": True},
+    {"address": 215, "key": "reactive_power_total", "name": "Reactive power of total output of PCS", "data_type": "S16", "coefficient": 0.1, "unit": "kVar", "signed": True},
+    {"address": 216, "key": "apparent_power_a", "name": "Apparent power of phase A output of PCS", "data_type": "U16", "coefficient": 0.1, "unit": "kVA", "signed": False},
+    {"address": 217, "key": "apparent_power_b", "name": "Apparent power of phase B output of PCS", "data_type": "U16", "coefficient": 0.1, "unit": "kVA", "signed": False},
+    {"address": 218, "key": "apparent_power_c", "name": "Apparent power of phase C output of PCS", "data_type": "U16", "coefficient": 0.1, "unit": "kVA", "signed": False},
+    {"address": 219, "key": "apparent_power_total", "name": "Apparent power of total output of PCS", "data_type": "U16", "coefficient": 0.1, "unit": "kVA", "signed": False},
+    {"address": 220, "key": "power_factor_a", "name": "Phase A power factor of PCS output", "data_type": "U16", "coefficient": 0.001, "unit": "", "signed": False},
+    {"address": 221, "key": "power_factor_b", "name": "Phase B power factor of PCS output", "data_type": "U16", "coefficient": 0.001, "unit": "", "signed": False},
+    {"address": 222, "key": "power_factor_c", "name": "Phase C power factor of PCS output", "data_type": "U16", "coefficient": 0.001, "unit": "", "signed": False},
+    {"address": 223, "key": "power_factor_total", "name": "Total power factor of PCS output", "data_type": "U16", "coefficient": 0.001, "unit": "", "signed": False},
+    {"address": 224, "key": "dc_input_power", "name": "PCS input power", "data_type": "S16", "coefficient": 0.1, "unit": "kW", "signed": True},
+    {"address": 225, "key": "dc_input_voltage", "name": "PCS input voltage", "data_type": "S16", "coefficient": 0.1, "unit": "V", "signed": True},
+    {"address": 226, "key": "dc_input_current", "name": "PCS input current", "data_type": "S16", "coefficient": 0.1, "unit": "A", "signed": True},
+]
+
+CONTROL_REGISTER_FIELDS = [
+    {"no": 1, "address": 301, "key": "running_mode", "name": "Selection of running mode", "permission": "Read-only", "data_type": "U16", "coefficient": 1, "unit": "", "signed": False, "remarks": "0-None, 1-CC charge, 2-CV charge, 3-CP charge"},
+    {"no": 2, "address": 302, "key": "cv_voltage", "name": "Voltage setting of constant voltage charging", "permission": "Read-only", "data_type": "U16", "coefficient": 1, "unit": "V", "signed": False, "remarks": "Charge battery when higher than pack voltage"},
+    {"no": 3, "address": 303, "key": "cc_current", "name": "Current setting of constant current charging", "permission": "Read-only", "data_type": "S16", "coefficient": 1, "unit": "A", "signed": True, "remarks": "Negative=discharge to grid, positive=charge from grid"},
+    {"no": 4, "address": 304, "key": "cp_active_power", "name": "Expectation of constant power active power", "permission": "Read-only", "data_type": "S16", "coefficient": 0.1, "unit": "kW", "signed": True, "remarks": "Negative=discharge to grid, positive=charge"},
+    {"no": 5, "address": 305, "key": "cp_reactive_power", "name": "Expectation of constant power reactive power", "permission": "Read-only", "data_type": "S16", "coefficient": 0.1, "unit": "kVar", "signed": True, "remarks": "Negative inductive, positive capacitive"},
+    {"no": 6, "address": 306, "key": "grid_setting", "name": "Grid-connected / grid-disconnected settings", "permission": "Read-only", "data_type": "U16", "coefficient": 1, "unit": "", "signed": False, "remarks": "0=Grid-connected, 1=VF grid-disconnected"},
+    {"no": 7, "address": 307, "key": "vf_voltage_three_wire", "name": "Grid-disconnected output voltage (three-wire)", "permission": "Read-only", "data_type": "U16", "coefficient": 1, "unit": "V", "signed": False, "remarks": "230 V by default"},
+    {"no": 8, "address": 308, "key": "vf_frequency", "name": "Grid-disconnected output frequency", "permission": "Read-only", "data_type": "U16", "coefficient": 0.01, "unit": "Hz", "signed": False, "remarks": "5000 by default → 50.00 Hz"},
+    {"no": 9, "address": 309, "key": "split_phase_power_a", "name": "Phase A active power (split-phase)", "permission": "Read-only", "data_type": "S16", "coefficient": 0.1, "unit": "kW", "signed": True, "remarks": "Negative=discharge, positive=charge"},
+    {"no": 10, "address": 310, "key": "split_phase_power_b", "name": "Phase B active power (split-phase)", "permission": "Read-only", "data_type": "S16", "coefficient": 0.1, "unit": "kW", "signed": True, "remarks": "Negative=discharge, positive=charge"},
+    {"no": 11, "address": 311, "key": "split_phase_power_c", "name": "Phase C active power (split-phase)", "permission": "Read-only", "data_type": "S16", "coefficient": 0.1, "unit": "kW", "signed": True, "remarks": "Negative=discharge, positive=charge"},
+    {"no": 12, "address": 312, "key": "split_phase_reactive_a", "name": "Phase A reactive power (split-phase)", "permission": "Read-only", "data_type": "S16", "coefficient": 0.1, "unit": "kVar", "signed": True, "remarks": "Negative inductive, positive capacitive"},
+    {"no": 13, "address": 313, "key": "split_phase_reactive_b", "name": "Phase B reactive power (split-phase)", "permission": "Read-only", "data_type": "S16", "coefficient": 0.1, "unit": "kVar", "signed": True, "remarks": "Negative inductive, positive capacitive"},
+    {"no": 14, "address": 314, "key": "split_phase_reactive_c", "name": "Phase C reactive power (split-phase)", "permission": "Read-only", "data_type": "S16", "coefficient": 0.1, "unit": "kVar", "signed": True, "remarks": "Negative inductive, positive capacitive"},
+    {"no": 15, "address": 315, "key": "vf_voltage_phase_a", "name": "Grid-disconnected output voltage split-phase A", "permission": "Read-only", "data_type": "U16", "coefficient": 1, "unit": "V", "signed": False, "remarks": ""},
+    {"no": 16, "address": 316, "key": "vf_voltage_phase_b", "name": "Grid-disconnected output voltage split-phase B", "permission": "Read-only", "data_type": "U16", "coefficient": 1, "unit": "V", "signed": False, "remarks": ""},
+    {"no": 17, "address": 317, "key": "vf_voltage_phase_c", "name": "Grid-disconnected output voltage split-phase C", "permission": "Read-only", "data_type": "U16", "coefficient": 1, "unit": "V", "signed": False, "remarks": ""},
+    {"no": 18, "address": 318, "key": "dc_droop_coeff", "name": "Microgrid DC voltage droop coefficient", "permission": "Read-only", "data_type": "U16", "coefficient": 1, "unit": "V", "signed": False, "remarks": "Range 0-100 V"},
+    {"no": 19, "address": 319, "key": "primary_fm_dead_zone", "name": "Primary FM frequency dead zone", "permission": "Read-only", "data_type": "U16", "coefficient": 0.01, "unit": "Hz", "signed": False, "remarks": "Dead zone ≥ 0.05 Hz"},
+    {"no": 20, "address": 320, "key": "primary_fm_k_value", "name": "Primary FM K value", "permission": "Read-only", "data_type": "U16", "coefficient": 1, "unit": "", "signed": False, "remarks": "Range 0-120"},
+    {"no": 21, "address": 321, "key": "reserve_321", "name": "Reserve", "permission": "Read-only", "data_type": "U16", "coefficient": 1, "unit": "", "signed": False, "remarks": ""},
+    {"no": 22, "address": 322, "key": "reserve_322", "name": "Reserve", "permission": "Read-only", "data_type": "U16", "coefficient": 1, "unit": "", "signed": False, "remarks": ""},
+    {"no": 23, "address": 323, "key": "reserve_323", "name": "Reserve", "permission": "Read-only", "data_type": "U16", "coefficient": 1, "unit": "", "signed": False, "remarks": ""},
+    {"no": 24, "address": 324, "key": "grid_switch_mode", "name": "Grid-connected/disconnected switch running mode", "permission": "Read-only", "data_type": "U16", "coefficient": 1, "unit": "", "signed": False, "remarks": "0-None,1-Manual,2-Automatic,3-Mix,4-Silence"},
+    {"no": 25, "address": 325, "key": "reserve_325", "name": "Reserve", "permission": "Read-only", "data_type": "U16", "coefficient": 1, "unit": "", "signed": False, "remarks": ""},
+    {"no": 26, "address": 326, "key": "battery_charge_voltage", "name": "Battery/super capacitor allowable charging voltage", "permission": "Read-only", "data_type": "U16", "coefficient": 1, "unit": "V", "signed": False, "remarks": ""},
+    {"no": 27, "address": 327, "key": "battery_discharge_voltage", "name": "Battery/super capacitor allowable discharging voltage", "permission": "Read-only", "data_type": "U16", "coefficient": 1, "unit": "V", "signed": False, "remarks": ""},
+    {"no": 28, "address": 328, "key": "battery_charge_current", "name": "Battery/super capacitor allowable charging current", "permission": "Read-only", "data_type": "U16", "coefficient": 1, "unit": "A", "signed": False, "remarks": ""},
+    {"no": 29, "address": 329, "key": "battery_discharge_current", "name": "Battery/super capacitor allowable discharging current", "permission": "Read-only", "data_type": "U16", "coefficient": 1, "unit": "A", "signed": False, "remarks": ""},
+    {"no": 30, "address": 330, "key": "time_sync_second", "name": "Time synchronization - Second", "permission": "Read-only", "data_type": "U16", "coefficient": 1, "unit": "s", "signed": False, "remarks": ""},
+    {"no": 31, "address": 331, "key": "time_sync_minute", "name": "Time synchronization - Minute", "permission": "Read-only", "data_type": "U16", "coefficient": 1, "unit": "min", "signed": False, "remarks": ""},
+    {"no": 32, "address": 332, "key": "time_sync_hour", "name": "Time synchronization - Hour", "permission": "Read-only", "data_type": "U16", "coefficient": 1, "unit": "h", "signed": False, "remarks": ""},
+    {"no": 33, "address": 333, "key": "time_sync_day", "name": "Time synchronization - Day", "permission": "Read-only", "data_type": "U16", "coefficient": 1, "unit": "day", "signed": False, "remarks": ""},
+    {"no": 34, "address": 334, "key": "time_sync_month", "name": "Time synchronization - Month", "permission": "Read-only", "data_type": "U16", "coefficient": 1, "unit": "month", "signed": False, "remarks": ""},
+    {"no": 35, "address": 335, "key": "time_sync_year", "name": "Time synchronization - Year", "permission": "Read-only", "data_type": "U16", "coefficient": 1, "unit": "year", "signed": False, "remarks": ""},
+    {"no": 36, "address": 336, "key": "reserve_336", "name": "Reserve", "permission": "Read-only", "data_type": "U16", "coefficient": 1, "unit": "", "signed": False, "remarks": ""},
+    {"no": 37, "address": 337, "key": "reserve_337", "name": "Reserve", "permission": "Read-only", "data_type": "U16", "coefficient": 1, "unit": "", "signed": False, "remarks": ""},
+    {"no": 38, "address": 338, "key": "reserve_338", "name": "Reserve", "permission": "Read-only", "data_type": "U16", "coefficient": 1, "unit": "", "signed": False, "remarks": ""},
+    {"no": 39, "address": 339, "key": "reserve_339", "name": "Reserve", "permission": "Read-only", "data_type": "U16", "coefficient": 1, "unit": "", "signed": False, "remarks": ""},
+    {"no": 40, "address": 340, "key": "reserve_340", "name": "Reserve", "permission": "Read-only", "data_type": "U16", "coefficient": 1, "unit": "", "signed": False, "remarks": ""},
+]
 
 class PCSClient:
     def __init__(self, host='192.168.0.20', port=502, unit_id=1):
@@ -31,6 +104,22 @@ class PCSClient:
         self.client.close()
         logger.info("Connection closed")
 
+    def _reset_connection(self):
+        """Try to reset TCP connection when errors occur."""
+        try:
+            self.client.close()
+        except Exception:
+            pass
+        self.client = ModbusTcpClient(self.host, port=self.port)
+        if self.client.connect():
+            logger.info("Reconnected to PCS after communication error")
+        else:
+            logger.error("Failed to reconnect to PCS")
+
+    def _handle_comm_error(self, error, context):
+        logger.error(f"Communication error during {context}: {error}")
+        self._reset_connection()
+
     def _read_input_registers(self, address, count):
         """Helper to read input registers (3x)."""
         try:
@@ -39,8 +128,20 @@ class PCSClient:
                 logger.error(f"Error reading input registers at {address}: {result}")
                 return None
             return result.registers
-        except ModbusException as e:
-            logger.error(f"Modbus exception reading input registers: {e}")
+        except (ModbusException, ConnectionException, OSError) as e:
+            self._handle_comm_error(e, f"read_input_registers addr={address} count={count}")
+            return None
+
+    def _read_holding_registers(self, address, count):
+        """Helper to read holding registers (4x)."""
+        try:
+            result = self.client.read_holding_registers(address, count=count, device_id=self.unit_id)
+            if result.isError():
+                logger.error(f"Error reading holding registers at {address}: {result}")
+                return None
+            return result.registers
+        except (ModbusException, ConnectionException, OSError) as e:
+            self._handle_comm_error(e, f"read_holding_registers addr={address} count={count}")
             return None
 
     def _read_discrete_inputs(self, address, count):
@@ -51,8 +152,8 @@ class PCSClient:
                 logger.error(f"Error reading discrete inputs at {address}: {result}")
                 return None
             return result.bits[:count] # Return only requested bits
-        except ModbusException as e:
-            logger.error(f"Modbus exception reading discrete inputs: {e}")
+        except (ModbusException, ConnectionException, OSError) as e:
+            self._handle_comm_error(e, f"read_discrete_inputs addr={address} count={count}")
             return None
 
     def _write_coil(self, address, value):
@@ -63,8 +164,8 @@ class PCSClient:
                 logger.error(f"Error writing coil at {address}: {result}")
                 return False
             return True
-        except ModbusException as e:
-            logger.error(f"Modbus exception writing coil: {e}")
+        except (ModbusException, ConnectionException, OSError) as e:
+            self._handle_comm_error(e, f"write_coil addr={address}")
             return False
 
     def _write_register(self, address, value):
@@ -75,8 +176,8 @@ class PCSClient:
                 logger.error(f"Error writing register at {address}: {result}")
                 return False
             return True
-        except ModbusException as e:
-            logger.error(f"Modbus exception writing register: {e}")
+        except (ModbusException, ConnectionException, OSError) as e:
+            self._handle_comm_error(e, f"write_register addr={address}")
             return False
 
     def _convert_signed_16bit(self, value, coefficient=1.0):
@@ -88,59 +189,35 @@ class PCSClient:
     # --- Telemetry (Input Registers 3x) ---
     def get_telemetry(self):
         """Reads key telemetry data."""
-        # Reading registers from 201 to 226 (26 registers)
-        count = 26 
+        # Reading registers from 201 to 226 (26 registers) per protocol
         start_addr = 201
+        count = len(REMOTE_METERING_FIELDS)
         regs = self._read_input_registers(start_addr, count)
         
         if not regs:
             return None
 
-        data = {
-            # AC Voltage (0.1 V)
-            "voltage_a": regs[0] * 0.1,
-            "voltage_b": regs[1] * 0.1,
-            "voltage_c": regs[2] * 0.1,
-            
-            # AC Current (0.1 A, Signed)
-            "current_a": self._convert_signed_16bit(regs[3], 0.1),
-            "current_b": self._convert_signed_16bit(regs[4], 0.1),
-            "current_c": self._convert_signed_16bit(regs[5], 0.1),
-            
-            # Frequency (0.01 Hz)
-            "frequency": regs[6] * 0.01,
-            
-            # Active Power (0.1 kW, Signed)
-            "active_power_a": self._convert_signed_16bit(regs[7], 0.1),
-            "active_power_b": self._convert_signed_16bit(regs[8], 0.1),
-            "active_power_c": self._convert_signed_16bit(regs[9], 0.1),
-            "active_power_total": self._convert_signed_16bit(regs[10], 0.1),
-            
-            # Reactive Power (0.1 kVar, Signed)
-            "reactive_power_a": self._convert_signed_16bit(regs[11], 0.1),
-            "reactive_power_b": self._convert_signed_16bit(regs[12], 0.1),
-            "reactive_power_c": self._convert_signed_16bit(regs[13], 0.1),
-            "reactive_power_total": self._convert_signed_16bit(regs[14], 0.1),
-            
-            # Apparent Power (0.1 kVA)
-            "apparent_power_a": regs[15] * 0.1,
-            "apparent_power_b": regs[16] * 0.1,
-            "apparent_power_c": regs[17] * 0.1,
-            "apparent_power_total": regs[18] * 0.1,
-            
-            # Power Factor (0.001)
-            "power_factor_a": regs[19] * 0.001,
-            "power_factor_b": regs[20] * 0.001,
-            "power_factor_c": regs[21] * 0.001,
-            "power_factor_total": regs[22] * 0.001,
-            
-            # DC Input (0.1 kW/V/A, Signed)
-            "dc_input_power": self._convert_signed_16bit(regs[23], 0.1),
-            "dc_input_voltage": self._convert_signed_16bit(regs[24], 0.1),
-            "dc_input_current": self._convert_signed_16bit(regs[25], 0.1),
-        }
+        data = {}
+        for field in REMOTE_METERING_FIELDS:
+            idx = field["address"] - start_addr
+            raw_value = regs[idx]
+            if field["signed"]:
+                value = self._convert_signed_16bit(raw_value, field["coefficient"])
+            else:
+                value = raw_value * field["coefficient"]
+            data[field["key"]] = value
 
         return data
+
+    @staticmethod
+    def get_remote_metering_metadata():
+        """Expose remote metering metadata (addresses 201-226)."""
+        return REMOTE_METERING_FIELDS
+
+    @staticmethod
+    def get_control_register_metadata():
+        """Expose control/holding register metadata (addresses 301-340)."""
+        return CONTROL_REGISTER_FIELDS
     
     def get_temperature(self):
         """Reads temperature data."""
@@ -224,6 +301,27 @@ class PCSClient:
             "fpga_version": regs[8],
             "current_n": regs[9] * 0.1,
         }
+        return data
+
+    def get_control_registers(self):
+        """Reads holding registers 301-340 (configuration snapshot)."""
+        start_addr = 301
+        count = len(CONTROL_REGISTER_FIELDS)
+        regs = self._read_holding_registers(start_addr, count)
+
+        if not regs:
+            return None
+
+        data = {}
+        for field in CONTROL_REGISTER_FIELDS:
+            idx = field["address"] - start_addr
+            raw_value = regs[idx]
+            if field["signed"]:
+                value = self._convert_signed_16bit(raw_value, field["coefficient"])
+            else:
+                value = raw_value * field["coefficient"]
+            data[field["key"]] = value
+
         return data
 
     # --- Status (Discrete Inputs 1x) ---

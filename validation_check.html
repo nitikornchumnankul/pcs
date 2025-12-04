@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>validation_check.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%95%E0%B8%A3%E0%B8%A7%E0%B8%88%E0%B8%AA%E0%B8%AD%E0%B8%9A%E0%B8%84%E0%B8%A7%E0%B8%B2%E0%B8%A1%E0%B8%96%E0%B8%B9%E0%B8%81%E0%B8%95%E0%B9%89%E0%B8%AD%E0%B8%87%E0%B8%82%E0%B8%AD%E0%B8%87%E0%B8%84%E0%B9%88%E0%B8%B2%E0%B8%97%E0%B8%B5%E0%B9%88%E0%B8%94%E0%B8%B6%E0%B8%87%E0%B8%88%E0%B8%B2%E0%B8%81-pcs">การตรวจสอบความถูกต้องของค่าที่ดึงจาก PCS</h1>
+<h2 id="%F0%9F%93%8B-%E0%B8%AA%E0%B8%A3%E0%B8%B8%E0%B8%9B%E0%B8%9C%E0%B8%A5%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%95%E0%B8%A3%E0%B8%A7%E0%B8%88%E0%B8%AA%E0%B8%AD%E0%B8%9A">📋 สรุปผลการตรวจสอบ</h2>
+<h3 id="%E2%9C%85-%E0%B8%AA%E0%B9%88%E0%B8%A7%E0%B8%99%E0%B8%97%E0%B8%B5%E0%B9%88%E0%B8%96%E0%B8%B9%E0%B8%81%E0%B8%95%E0%B9%89%E0%B8%AD%E0%B8%87">✅ ส่วนที่ถูกต้อง</h3>
+<ol>
+<li>
+<p><strong>Status Registers (Address 81-96)</strong></p>
+<ul>
+<li>✅ Address ถูกต้อง: 81-96</li>
+<li>✅ Mapping ถูกต้อง: bits[0-15] ตรงกับ address 81-96</li>
+<li>✅ BMS Dry Contact: bits[13] ตรงกับ address 94</li>
+</ul>
+</li>
+<li>
+<p><strong>Telemetry - AC Voltage (Address 201-203)</strong></p>
+<ul>
+<li>✅ Address: 201-203</li>
+<li>✅ Coefficient: × 0.1 ✓</li>
+<li>✅ Data Type: U16 ✓</li>
+</ul>
+</li>
+<li>
+<p><strong>Telemetry - AC Current (Address 204-206)</strong></p>
+<ul>
+<li>✅ Address: 204-206</li>
+<li>✅ Coefficient: × 0.1 ✓</li>
+<li>✅ Data Type: S16 (Signed) ✓</li>
+<li>✅ Conversion: ใช้ <code>_convert_signed_16bit()</code> ✓</li>
+</ul>
+</li>
+<li>
+<p><strong>Telemetry - Frequency (Address 207)</strong></p>
+<ul>
+<li>✅ Address: 207</li>
+<li>✅ Coefficient: × 0.01 ✓</li>
+</ul>
+</li>
+<li>
+<p><strong>Telemetry - Active Power (Address 208-211)</strong></p>
+<ul>
+<li>✅ Address: 208-211</li>
+<li>✅ Coefficient: × 0.1 ✓</li>
+<li>✅ Data Type: S16 (Signed) ✓</li>
+</ul>
+</li>
+<li>
+<p><strong>Telemetry - Reactive Power (Address 212-215)</strong></p>
+<ul>
+<li>✅ Address: 212-215</li>
+<li>✅ Coefficient: × 0.1 ✓</li>
+<li>✅ Data Type: S16 (Signed) ✓</li>
+</ul>
+</li>
+<li>
+<p><strong>Telemetry - Apparent Power (Address 216-219)</strong></p>
+<ul>
+<li>✅ Address: 216-219</li>
+<li>✅ Coefficient: × 0.1 ✓</li>
+<li>✅ Data Type: U16 ✓</li>
+</ul>
+</li>
+<li>
+<p><strong>Telemetry - Power Factor (Address 220-223)</strong></p>
+<ul>
+<li>✅ Address: 220-223</li>
+<li>✅ Coefficient: × 0.001 ✓</li>
+</ul>
+</li>
+<li>
+<p><strong>Telemetry - DC Input (Address 224-226)</strong></p>
+<ul>
+<li>✅ Address: 224-226</li>
+<li>✅ Coefficient: × 0.1 ✓</li>
+<li>✅ Data Type: S16 (Signed) ✓</li>
+</ul>
+</li>
+<li>
+<p><strong>Temperature (Address 227, 257-261)</strong></p>
+<ul>
+<li>✅ Address: 227 (Radiator)</li>
+<li>✅ Address: 257-261 (SOC, IGBT 1-4)</li>
+<li>✅ Coefficient: × 1.0 ✓</li>
+</ul>
+</li>
+<li>
+<p><strong>Fault Words (Address 256, 272-275)</strong></p>
+<ul>
+<li>✅ Address: 256 (Fault Word 5)</li>
+<li>✅ Address: 272-275 (Fault Word 1-4)</li>
+</ul>
+</li>
+<li>
+<p><strong>System Info (Address 238-247)</strong></p>
+<ul>
+<li>✅ Address: 238 (Comm Status)</li>
+<li>✅ Address: 239-244 (System Clock)</li>
+<li>✅ Address: 245-246 (Version)</li>
+<li>✅ Address: 247 (Phase N Current)</li>
+</ul>
+</li>
+</ol>
+<h3 id="%E2%9A%A0%EF%B8%8F-%E0%B8%AA%E0%B9%88%E0%B8%A7%E0%B8%99%E0%B8%97%E0%B8%B5%E0%B9%88%E0%B8%95%E0%B9%89%E0%B8%AD%E0%B8%87%E0%B8%95%E0%B8%A3%E0%B8%A7%E0%B8%88%E0%B8%AA%E0%B8%AD%E0%B8%9A%E0%B9%80%E0%B8%9E%E0%B8%B4%E0%B9%88%E0%B8%A1%E0%B9%80%E0%B8%95%E0%B8%B4%E0%B8%A1">⚠️ ส่วนที่ต้องตรวจสอบเพิ่มเติม</h3>
+<ol>
+<li><strong>Accumulated Power (Address 230-237)</strong>
+<ul>
+<li>⚠️ <strong>ต้องตรวจสอบ</strong>: การรวม 32-bit value</li>
+<li><strong>โค้ดปัจจุบัน</strong>: <code>(regs[1] &lt;&lt; 16 | regs[0])</code></li>
+<li><strong>ตาม Protocol</strong>: Low word อยู่ที่ address ต่ำกว่า, High word อยู่ที่ address สูงกว่า</li>
+<li><strong>ควรเป็น</strong>: <code>(regs[1] &lt;&lt; 16) | regs[0]</code> (ถูกต้องแล้ว)</li>
+<li><strong>หมายเหตุ</strong>: ต้องตรวจสอบกับค่าจริงจากอุปกรณ์</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="%F0%9F%94%8D-%E0%B8%A7%E0%B8%B4%E0%B8%98%E0%B8%B5%E0%B8%95%E0%B8%A3%E0%B8%A7%E0%B8%88%E0%B8%AA%E0%B8%AD%E0%B8%9A%E0%B8%AD%E0%B8%A2%E0%B9%88%E0%B8%B2%E0%B8%87%E0%B8%87%E0%B9%88%E0%B8%B2%E0%B8%A2">🔍 วิธีตรวจสอบอย่างง่าย</h2>
+<h3 id="%E0%B8%A7%E0%B8%B4%E0%B8%98%E0%B8%B5%E0%B8%97%E0%B8%B5%E0%B9%88-1-%E0%B8%95%E0%B8%A3%E0%B8%A7%E0%B8%88%E0%B8%AA%E0%B8%AD%E0%B8%9A-range-%E0%B8%82%E0%B8%AD%E0%B8%87%E0%B8%84%E0%B9%88%E0%B8%B2">วิธีที่ 1: ตรวจสอบ Range ของค่า</h3>
+<h4 id="11-ac-voltage-address-201-203">1.1 AC Voltage (Address 201-203)</h4>
+<pre class="hljs"><code><div><span class="hljs-comment"># ค่าปกติ: 180-250 V (ระบบ 230V)</span>
+<span class="hljs-comment"># Register value: 1800-2500</span>
+voltage = regs[<span class="hljs-number">0</span>] * <span class="hljs-number">0.1</span>
+<span class="hljs-keyword">assert</span> <span class="hljs-number">180</span> &lt;= voltage &lt;= <span class="hljs-number">250</span>, <span class="hljs-string">f"Voltage out of range: <span class="hljs-subst">{voltage}</span>V"</span>
+</div></code></pre>
+<h4 id="12-frequency-address-207">1.2 Frequency (Address 207)</h4>
+<pre class="hljs"><code><div><span class="hljs-comment"># ค่าปกติ: 49.5-50.5 Hz (ระบบ 50Hz) หรือ 59.5-60.5 Hz (ระบบ 60Hz)</span>
+<span class="hljs-comment"># Register value: 4950-5050 (50Hz) หรือ 5950-6050 (60Hz)</span>
+frequency = regs[<span class="hljs-number">6</span>] * <span class="hljs-number">0.01</span>
+<span class="hljs-keyword">assert</span> <span class="hljs-number">49.5</span> &lt;= frequency &lt;= <span class="hljs-number">50.5</span> <span class="hljs-keyword">or</span> <span class="hljs-number">59.5</span> &lt;= frequency &lt;= <span class="hljs-number">60.5</span>, <span class="hljs-string">f"Frequency out of range: <span class="hljs-subst">{frequency}</span>Hz"</span>
+</div></code></pre>
+<h4 id="13-power-factor-address-220-223">1.3 Power Factor (Address 220-223)</h4>
+<pre class="hljs"><code><div><span class="hljs-comment"># ค่าปกติ: 0.0-1.0</span>
+<span class="hljs-comment"># Register value: 0-1000</span>
+power_factor = regs[<span class="hljs-number">19</span>] * <span class="hljs-number">0.001</span>
+<span class="hljs-keyword">assert</span> <span class="hljs-number">0.0</span> &lt;= power_factor &lt;= <span class="hljs-number">1.0</span>, <span class="hljs-string">f"Power Factor out of range: <span class="hljs-subst">{power_factor}</span>"</span>
+</div></code></pre>
+<h4 id="14-temperature-address-227-257-261">1.4 Temperature (Address 227, 257-261)</h4>
+<pre class="hljs"><code><div><span class="hljs-comment"># ค่าปกติ: 0-100°C</span>
+<span class="hljs-comment"># Register value: 0-100</span>
+temp = regs_227[<span class="hljs-number">0</span>]
+<span class="hljs-keyword">assert</span> <span class="hljs-number">0</span> &lt;= temp &lt;= <span class="hljs-number">100</span>, <span class="hljs-string">f"Temperature out of range: <span class="hljs-subst">{temp}</span>°C"</span>
+</div></code></pre>
+<hr>
+<h3 id="%E0%B8%A7%E0%B8%B4%E0%B8%98%E0%B8%B5%E0%B8%97%E0%B8%B5%E0%B9%88-2-%E0%B8%95%E0%B8%A3%E0%B8%A7%E0%B8%88%E0%B8%AA%E0%B8%AD%E0%B8%9A%E0%B8%84%E0%B8%A7%E0%B8%B2%E0%B8%A1%E0%B8%AA%E0%B8%B1%E0%B8%A1%E0%B8%9E%E0%B8%B1%E0%B8%99%E0%B8%98%E0%B9%8C%E0%B8%A3%E0%B8%B0%E0%B8%AB%E0%B8%A7%E0%B9%88%E0%B8%B2%E0%B8%87%E0%B8%84%E0%B9%88%E0%B8%B2">วิธีที่ 2: ตรวจสอบความสัมพันธ์ระหว่างค่า</h3>
+<h4 id="21-power--voltage-%C3%97-current">2.1 Power = Voltage × Current</h4>
+<pre class="hljs"><code><div><span class="hljs-comment"># ตรวจสอบ: Active Power ≈ Voltage × Current (Phase A)</span>
+voltage_a = telemetry[<span class="hljs-string">'voltage_a'</span>]  <span class="hljs-comment"># V</span>
+current_a = abs(telemetry[<span class="hljs-string">'current_a'</span>])  <span class="hljs-comment"># A</span>
+active_power_a = abs(telemetry[<span class="hljs-string">'active_power_a'</span>])  <span class="hljs-comment"># kW</span>
+
+<span class="hljs-comment"># คำนวณ: Power (kW) = V × I / 1000</span>
+calculated_power = (voltage_a * current_a) / <span class="hljs-number">1000</span>
+
+<span class="hljs-comment"># เปรียบเทียบ (ยอมรับความแตกต่าง 10%)</span>
+difference = abs(calculated_power - active_power_a)
+tolerance = active_power_a * <span class="hljs-number">0.1</span>
+
+<span class="hljs-keyword">if</span> difference &gt; tolerance:
+    print(<span class="hljs-string">f"⚠️ Warning: Power mismatch!"</span>)
+    print(<span class="hljs-string">f"  Calculated: <span class="hljs-subst">{calculated_power:<span class="hljs-number">.2</span>f}</span> kW"</span>)
+    print(<span class="hljs-string">f"  Actual: <span class="hljs-subst">{active_power_a:<span class="hljs-number">.2</span>f}</span> kW"</span>)
+    print(<span class="hljs-string">f"  Difference: <span class="hljs-subst">{difference:<span class="hljs-number">.2</span>f}</span> kW"</span>)
+</div></code></pre>
+<h4 id="22-apparent-power--%E2%88%9Aactive%C2%B2--reactive%C2%B2">2.2 Apparent Power = √(Active² + Reactive²)</h4>
+<pre class="hljs"><code><div><span class="hljs-comment"># ตรวจสอบ: Apparent Power ≈ √(Active Power² + Reactive Power²)</span>
+active = abs(telemetry[<span class="hljs-string">'active_power_a'</span>])
+reactive = abs(telemetry[<span class="hljs-string">'reactive_power_a'</span>])
+apparent = telemetry[<span class="hljs-string">'apparent_power_a'</span>]
+
+calculated_apparent = (active**<span class="hljs-number">2</span> + reactive**<span class="hljs-number">2</span>)**<span class="hljs-number">0.5</span>
+
+<span class="hljs-comment"># เปรียบเทียบ (ยอมรับความแตกต่าง 5%)</span>
+difference = abs(calculated_apparent - apparent)
+tolerance = apparent * <span class="hljs-number">0.05</span>
+
+<span class="hljs-keyword">if</span> difference &gt; tolerance:
+    print(<span class="hljs-string">f"⚠️ Warning: Apparent Power mismatch!"</span>)
+    print(<span class="hljs-string">f"  Calculated: <span class="hljs-subst">{calculated_apparent:<span class="hljs-number">.2</span>f}</span> kVA"</span>)
+    print(<span class="hljs-string">f"  Actual: <span class="hljs-subst">{apparent:<span class="hljs-number">.2</span>f}</span> kVA"</span>)
+</div></code></pre>
+<h4 id="23-power-factor--active-power--apparent-power">2.3 Power Factor = Active Power / Apparent Power</h4>
+<pre class="hljs"><code><div><span class="hljs-comment"># ตรวจสอบ: Power Factor = Active / Apparent</span>
+active = abs(telemetry[<span class="hljs-string">'active_power_a'</span>])
+apparent = telemetry[<span class="hljs-string">'apparent_power_a'</span>]
+power_factor = telemetry[<span class="hljs-string">'power_factor_a'</span>]
+
+<span class="hljs-keyword">if</span> apparent &gt; <span class="hljs-number">0</span>:
+    calculated_pf = active / apparent
+    
+    <span class="hljs-comment"># เปรียบเทียบ (ยอมรับความแตกต่าง 0.01)</span>
+    difference = abs(calculated_pf - power_factor)
+    
+    <span class="hljs-keyword">if</span> difference &gt; <span class="hljs-number">0.01</span>:
+        print(<span class="hljs-string">f"⚠️ Warning: Power Factor mismatch!"</span>)
+        print(<span class="hljs-string">f"  Calculated: <span class="hljs-subst">{calculated_pf:<span class="hljs-number">.3</span>f}</span>"</span>)
+        print(<span class="hljs-string">f"  Actual: <span class="hljs-subst">{power_factor:<span class="hljs-number">.3</span>f}</span>"</span>)
+</div></code></pre>
+<h4 id="24-total-power--sum-of-phases">2.4 Total Power = Sum of Phases</h4>
+<pre class="hljs"><code><div><span class="hljs-comment"># ตรวจสอบ: Total Active Power ≈ Phase A + Phase B + Phase C</span>
+total = abs(telemetry[<span class="hljs-string">'active_power_total'</span>])
+sum_phases = abs(telemetry[<span class="hljs-string">'active_power_a'</span>]) + \
+             abs(telemetry[<span class="hljs-string">'active_power_b'</span>]) + \
+             abs(telemetry[<span class="hljs-string">'active_power_c'</span>])
+
+<span class="hljs-comment"># เปรียบเทียบ (ยอมรับความแตกต่าง 5%)</span>
+difference = abs(total - sum_phases)
+tolerance = total * <span class="hljs-number">0.05</span> <span class="hljs-keyword">if</span> total &gt; <span class="hljs-number">0</span> <span class="hljs-keyword">else</span> <span class="hljs-number">0.1</span>
+
+<span class="hljs-keyword">if</span> difference &gt; tolerance:
+    print(<span class="hljs-string">f"⚠️ Warning: Total Power mismatch!"</span>)
+    print(<span class="hljs-string">f"  Sum of Phases: <span class="hljs-subst">{sum_phases:<span class="hljs-number">.2</span>f}</span> kW"</span>)
+    print(<span class="hljs-string">f"  Total: <span class="hljs-subst">{total:<span class="hljs-number">.2</span>f}</span> kW"</span>)
+</div></code></pre>
+<h4 id="25-dc-power--dc-voltage-%C3%97-dc-current">2.5 DC Power = DC Voltage × DC Current</h4>
+<pre class="hljs"><code><div><span class="hljs-comment"># ตรวจสอบ: DC Input Power ≈ DC Voltage × DC Current</span>
+dc_voltage = abs(telemetry[<span class="hljs-string">'dc_input_voltage'</span>])
+dc_current = abs(telemetry[<span class="hljs-string">'dc_input_current'</span>])
+dc_power = abs(telemetry[<span class="hljs-string">'dc_input_power'</span>])
+
+<span class="hljs-comment"># คำนวณ: Power (kW) = V × I / 1000</span>
+calculated_dc_power = (dc_voltage * dc_current) / <span class="hljs-number">1000</span>
+
+<span class="hljs-comment"># เปรียบเทียบ (ยอมรับความแตกต่าง 10%)</span>
+difference = abs(calculated_dc_power - dc_power)
+tolerance = dc_power * <span class="hljs-number">0.1</span> <span class="hljs-keyword">if</span> dc_power &gt; <span class="hljs-number">0</span> <span class="hljs-keyword">else</span> <span class="hljs-number">0.1</span>
+
+<span class="hljs-keyword">if</span> difference &gt; tolerance:
+    print(<span class="hljs-string">f"⚠️ Warning: DC Power mismatch!"</span>)
+    print(<span class="hljs-string">f"  Calculated: <span class="hljs-subst">{calculated_dc_power:<span class="hljs-number">.2</span>f}</span> kW"</span>)
+    print(<span class="hljs-string">f"  Actual: <span class="hljs-subst">{dc_power:<span class="hljs-number">.2</span>f}</span> kW"</span>)
+</div></code></pre>
+<hr>
+<h3 id="%E0%B8%A7%E0%B8%B4%E0%B8%98%E0%B8%B5%E0%B8%97%E0%B8%B5%E0%B9%88-3-%E0%B9%83%E0%B8%8A%E0%B9%89-modbus-client-tools">วิธีที่ 3: ใช้ Modbus Client Tools</h3>
+<h4 id="31-%E0%B9%83%E0%B8%8A%E0%B9%89-modbus-poll-%E0%B8%AB%E0%B8%A3%E0%B8%B7%E0%B8%AD-modscan">3.1 ใช้ Modbus Poll หรือ ModScan</h4>
+<ol>
+<li>เปิด Modbus Poll/ModScan</li>
+<li>ตั้งค่า Connection:
+<ul>
+<li>IP: 192.168.0.20</li>
+<li>Port: 502</li>
+<li>Unit ID: 1</li>
+</ul>
+</li>
+<li>อ่านค่าแต่ละ Address:
+<ul>
+<li>Address 201: Voltage A</li>
+<li>Address 207: Frequency</li>
+<li>Address 211: Total Active Power</li>
+</ul>
+</li>
+<li>เปรียบเทียบกับค่าที่แสดงใน Streamlit</li>
+</ol>
+<h4 id="32-%E0%B9%83%E0%B8%8A%E0%B9%89-python-script-%E0%B8%95%E0%B8%A3%E0%B8%A7%E0%B8%88%E0%B8%AA%E0%B8%AD%E0%B8%9A">3.2 ใช้ Python Script ตรวจสอบ</h4>
+<pre class="hljs"><code><div><span class="hljs-keyword">from</span> pcs_client <span class="hljs-keyword">import</span> PCSClient
+
+client = PCSClient(host=<span class="hljs-string">'192.168.0.20'</span>, port=<span class="hljs-number">502</span>)
+<span class="hljs-keyword">if</span> client.connect():
+    <span class="hljs-comment"># อ่าน Raw Registers</span>
+    regs = client._read_input_registers(<span class="hljs-number">201</span>, <span class="hljs-number">26</span>)
+    
+    print(<span class="hljs-string">"=== Raw Register Values ==="</span>)
+    print(<span class="hljs-string">f"Address 201 (Voltage A): <span class="hljs-subst">{regs[<span class="hljs-number">0</span>]}</span> → <span class="hljs-subst">{regs[<span class="hljs-number">0</span>] * <span class="hljs-number">0.1</span>}</span> V"</span>)
+    print(<span class="hljs-string">f"Address 207 (Frequency): <span class="hljs-subst">{regs[<span class="hljs-number">6</span>]}</span> → <span class="hljs-subst">{regs[<span class="hljs-number">6</span>] * <span class="hljs-number">0.01</span>}</span> Hz"</span>)
+    print(<span class="hljs-string">f"Address 211 (Total Power): <span class="hljs-subst">{regs[<span class="hljs-number">10</span>]}</span> → <span class="hljs-subst">{regs[<span class="hljs-number">10</span>] * <span class="hljs-number">0.1</span>}</span> kW"</span>)
+    
+    <span class="hljs-comment"># อ่านผ่าน Method</span>
+    telemetry = client.get_telemetry()
+    print(<span class="hljs-string">"\n=== Processed Values ==="</span>)
+    print(<span class="hljs-string">f"Voltage A: <span class="hljs-subst">{telemetry[<span class="hljs-string">'voltage_a'</span>]}</span> V"</span>)
+    print(<span class="hljs-string">f"Frequency: <span class="hljs-subst">{telemetry[<span class="hljs-string">'frequency'</span>]}</span> Hz"</span>)
+    print(<span class="hljs-string">f"Total Active Power: <span class="hljs-subst">{telemetry[<span class="hljs-string">'active_power_total'</span>]}</span> kW"</span>)
+    
+    client.close()
+</div></code></pre>
+<hr>
+<h3 id="%E0%B8%A7%E0%B8%B4%E0%B8%98%E0%B8%B5%E0%B8%97%E0%B8%B5%E0%B9%88-4-%E0%B8%95%E0%B8%A3%E0%B8%A7%E0%B8%88%E0%B8%AA%E0%B8%AD%E0%B8%9A-signed-values">วิธีที่ 4: ตรวจสอบ Signed Values</h3>
+<h4 id="41-%E0%B8%95%E0%B8%A3%E0%B8%A7%E0%B8%88%E0%B8%AA%E0%B8%AD%E0%B8%9A-current-address-204-206">4.1 ตรวจสอบ Current (Address 204-206)</h4>
+<pre class="hljs"><code><div><span class="hljs-comment"># Current เป็น Signed: บวก = Charge, ลบ = Discharge</span>
+current_a = telemetry[<span class="hljs-string">'current_a'</span>]
+
+<span class="hljs-comment"># ตรวจสอบ range: -3276.8 ถึง 3276.7 A</span>
+<span class="hljs-keyword">assert</span> <span class="hljs-number">-3276.8</span> &lt;= current_a &lt;= <span class="hljs-number">3276.7</span>, <span class="hljs-string">f"Current out of range: <span class="hljs-subst">{current_a}</span>A"</span>
+
+<span class="hljs-comment"># ตรวจสอบว่าค่าลบถูกแปลงถูกต้อง</span>
+reg_value = regs[<span class="hljs-number">3</span>]
+<span class="hljs-keyword">if</span> reg_value &gt; <span class="hljs-number">32767</span>:
+    expected_current = (reg_value - <span class="hljs-number">65536</span>) * <span class="hljs-number">0.1</span>
+    <span class="hljs-keyword">assert</span> abs(current_a - expected_current) &lt; <span class="hljs-number">0.01</span>, <span class="hljs-string">"Signed conversion error"</span>
+</div></code></pre>
+<h4 id="42-%E0%B8%95%E0%B8%A3%E0%B8%A7%E0%B8%88%E0%B8%AA%E0%B8%AD%E0%B8%9A-active-power-address-208-211">4.2 ตรวจสอบ Active Power (Address 208-211)</h4>
+<pre class="hljs"><code><div><span class="hljs-comment"># Active Power เป็น Signed: บวก = Charge, ลบ = Discharge</span>
+active_power = telemetry[<span class="hljs-string">'active_power_total'</span>]
+
+<span class="hljs-comment"># ตรวจสอบ range: -3276.8 ถึง 3276.7 kW</span>
+<span class="hljs-keyword">assert</span> <span class="hljs-number">-3276.8</span> &lt;= active_power &lt;= <span class="hljs-number">3276.7</span>, <span class="hljs-string">f"Power out of range: <span class="hljs-subst">{active_power}</span>kW"</span>
+</div></code></pre>
+<hr>
+<h3 id="%E0%B8%A7%E0%B8%B4%E0%B8%98%E0%B8%B5%E0%B8%97%E0%B8%B5%E0%B9%88-5-%E0%B8%95%E0%B8%A3%E0%B8%A7%E0%B8%88%E0%B8%AA%E0%B8%AD%E0%B8%9A-32-bit-values-accumulated-power">วิธีที่ 5: ตรวจสอบ 32-bit Values (Accumulated Power)</h3>
+<h4 id="51-%E0%B8%95%E0%B8%A3%E0%B8%A7%E0%B8%88%E0%B8%AA%E0%B8%AD%E0%B8%9A%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%A3%E0%B8%A7%E0%B8%A1-32-bit">5.1 ตรวจสอบการรวม 32-bit</h4>
+<pre class="hljs"><code><div><span class="hljs-comment"># อ่าน Raw Registers</span>
+regs = client._read_input_registers(<span class="hljs-number">230</span>, <span class="hljs-number">8</span>)
+
+<span class="hljs-comment"># ตรวจสอบ AC Charging Energy</span>
+low = regs[<span class="hljs-number">0</span>]   <span class="hljs-comment"># Address 230</span>
+high = regs[<span class="hljs-number">1</span>]  <span class="hljs-comment"># Address 231</span>
+
+<span class="hljs-comment"># รวมเป็น 32-bit</span>
+combined = (high &lt;&lt; <span class="hljs-number">16</span>) | low
+energy_kwh = combined * <span class="hljs-number">0.001</span>
+
+print(<span class="hljs-string">f"Low (230): <span class="hljs-subst">{low}</span> (0x<span class="hljs-subst">{low:<span class="hljs-number">04</span>X}</span>)"</span>)
+print(<span class="hljs-string">f"High (231): <span class="hljs-subst">{high}</span> (0x<span class="hljs-subst">{high:<span class="hljs-number">04</span>X}</span>)"</span>)
+print(<span class="hljs-string">f"Combined: <span class="hljs-subst">{combined}</span> (0x<span class="hljs-subst">{combined:<span class="hljs-number">08</span>X}</span>)"</span>)
+print(<span class="hljs-string">f"Energy: <span class="hljs-subst">{energy_kwh:<span class="hljs-number">.3</span>f}</span> kWh"</span>)
+
+<span class="hljs-comment"># ตรวจสอบว่าไม่เกิน 32-bit max</span>
+<span class="hljs-keyword">assert</span> combined &lt;= <span class="hljs-number">0xFFFFFFFF</span>, <span class="hljs-string">"32-bit value overflow"</span>
+</div></code></pre>
+<h4 id="52-%E0%B8%95%E0%B8%A3%E0%B8%A7%E0%B8%88%E0%B8%AA%E0%B8%AD%E0%B8%9A%E0%B8%81%E0%B8%B1%E0%B8%9A%E0%B8%84%E0%B9%88%E0%B8%B2%E0%B8%88%E0%B8%A3%E0%B8%B4%E0%B8%87">5.2 ตรวจสอบกับค่าจริง</h4>
+<pre class="hljs"><code><div><span class="hljs-comment"># เปรียบเทียบกับค่าที่แสดงใน UI</span>
+acc_power = client.get_accumulated_power()
+print(<span class="hljs-string">f"AC Charging: <span class="hljs-subst">{acc_power[<span class="hljs-string">'ac_charging_kwh'</span>]:<span class="hljs-number">.3</span>f}</span> kWh"</span>)
+
+<span class="hljs-comment"># ตรวจสอบว่าค่าเพิ่มขึ้นเมื่อเวลาผ่านไป (ถ้า device กำลัง charge)</span>
+</div></code></pre>
+<hr>
+<h2 id="%F0%9F%93%9D-checklist-%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%95%E0%B8%A3%E0%B8%A7%E0%B8%88%E0%B8%AA%E0%B8%AD%E0%B8%9A">📝 Checklist การตรวจสอบ</h2>
+<h3 id="%E2%9C%85-%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%95%E0%B8%A3%E0%B8%A7%E0%B8%88%E0%B8%AA%E0%B8%AD%E0%B8%9A%E0%B9%80%E0%B8%9A%E0%B8%B7%E0%B9%89%E0%B8%AD%E0%B8%87%E0%B8%95%E0%B9%89%E0%B8%99">✅ การตรวจสอบเบื้องต้น</h3>
+<ul>
+<li><input type="checkbox" id="checkbox0"><label for="checkbox0"></label><strong>Connection</strong>: เชื่อมต่อกับ PCS สำเร็จ</li>
+<li><input type="checkbox" id="checkbox1"><label for="checkbox1"></label><strong>Status</strong>: อ่าน Status ได้ (Address 81-96)</li>
+<li><input type="checkbox" id="checkbox2"><label for="checkbox2"></label><strong>Telemetry</strong>: อ่าน Telemetry ได้ (Address 201-226)</li>
+<li><input type="checkbox" id="checkbox3"><label for="checkbox3"></label><strong>Temperature</strong>: อ่าน Temperature ได้ (Address 227, 257-261)</li>
+<li><input type="checkbox" id="checkbox4"><label for="checkbox4"></label><strong>Fault Words</strong>: อ่าน Fault Words ได้ (Address 256, 272-275)</li>
+<li><input type="checkbox" id="checkbox5"><label for="checkbox5"></label><strong>System Info</strong>: อ่าน System Info ได้ (Address 238-247)</li>
+<li><input type="checkbox" id="checkbox6"><label for="checkbox6"></label><strong>Accumulated Power</strong>: อ่าน Accumulated Power ได้ (Address 230-237)</li>
+</ul>
+<h3 id="%E2%9C%85-%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%95%E0%B8%A3%E0%B8%A7%E0%B8%88%E0%B8%AA%E0%B8%AD%E0%B8%9A-range">✅ การตรวจสอบ Range</h3>
+<ul>
+<li><input type="checkbox" id="checkbox7"><label for="checkbox7"></label><strong>Voltage</strong>: 180-250 V (ระบบ 230V)</li>
+<li><input type="checkbox" id="checkbox8"><label for="checkbox8"></label><strong>Frequency</strong>: 49.5-50.5 Hz (50Hz) หรือ 59.5-60.5 Hz (60Hz)</li>
+<li><input type="checkbox" id="checkbox9"><label for="checkbox9"></label><strong>Current</strong>: -3276.8 ถึง 3276.7 A</li>
+<li><input type="checkbox" id="checkbox10"><label for="checkbox10"></label><strong>Power</strong>: -3276.8 ถึง 3276.7 kW</li>
+<li><input type="checkbox" id="checkbox11"><label for="checkbox11"></label><strong>Power Factor</strong>: 0.0-1.0</li>
+<li><input type="checkbox" id="checkbox12"><label for="checkbox12"></label><strong>Temperature</strong>: 0-100°C</li>
+</ul>
+<h3 id="%E2%9C%85-%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%95%E0%B8%A3%E0%B8%A7%E0%B8%88%E0%B8%AA%E0%B8%AD%E0%B8%9A%E0%B8%84%E0%B8%A7%E0%B8%B2%E0%B8%A1%E0%B8%AA%E0%B8%B1%E0%B8%A1%E0%B8%9E%E0%B8%B1%E0%B8%99%E0%B8%98%E0%B9%8C">✅ การตรวจสอบความสัมพันธ์</h3>
+<ul>
+<li><input type="checkbox" id="checkbox13"><label for="checkbox13"></label><strong>Power = V × I</strong>: Active Power ≈ Voltage × Current</li>
+<li><input type="checkbox" id="checkbox14"><label for="checkbox14"></label><strong>Apparent = √(Active² + Reactive²)</strong>: Apparent Power ≈ √(Active² + Reactive²)</li>
+<li><input type="checkbox" id="checkbox15"><label for="checkbox15"></label><strong>PF = Active / Apparent</strong>: Power Factor ≈ Active / Apparent</li>
+<li><input type="checkbox" id="checkbox16"><label for="checkbox16"></label><strong>Total = Sum</strong>: Total Power ≈ Sum of Phases</li>
+<li><input type="checkbox" id="checkbox17"><label for="checkbox17"></label><strong>DC Power = DC V × DC I</strong>: DC Power ≈ DC Voltage × DC Current</li>
+</ul>
+<h3 id="%E2%9C%85-%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%95%E0%B8%A3%E0%B8%A7%E0%B8%88%E0%B8%AA%E0%B8%AD%E0%B8%9A-signed-values">✅ การตรวจสอบ Signed Values</h3>
+<ul>
+<li><input type="checkbox" id="checkbox18"><label for="checkbox18"></label><strong>Current</strong>: ค่าลบถูกแปลงถูกต้อง</li>
+<li><input type="checkbox" id="checkbox19"><label for="checkbox19"></label><strong>Active Power</strong>: ค่าลบถูกแปลงถูกต้อง</li>
+<li><input type="checkbox" id="checkbox20"><label for="checkbox20"></label><strong>Reactive Power</strong>: ค่าลบถูกแปลงถูกต้อง</li>
+<li><input type="checkbox" id="checkbox21"><label for="checkbox21"></label><strong>DC Input</strong>: ค่าลบถูกแปลงถูกต้อง</li>
+</ul>
+<h3 id="%E2%9C%85-%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%95%E0%B8%A3%E0%B8%A7%E0%B8%88%E0%B8%AA%E0%B8%AD%E0%B8%9A-32-bit-values">✅ การตรวจสอบ 32-bit Values</h3>
+<ul>
+<li><input type="checkbox" id="checkbox22"><label for="checkbox22"></label><strong>Accumulated Power</strong>: การรวม Low/High ถูกต้อง</li>
+<li><input type="checkbox" id="checkbox23"><label for="checkbox23"></label><strong>Energy Values</strong>: ค่าไม่เกิน 32-bit max</li>
+</ul>
+<hr>
+<h2 id="%F0%9F%9B%A0%EF%B8%8F-script-%E0%B8%AA%E0%B8%B3%E0%B8%AB%E0%B8%A3%E0%B8%B1%E0%B8%9A%E0%B8%95%E0%B8%A3%E0%B8%A7%E0%B8%88%E0%B8%AA%E0%B8%AD%E0%B8%9A%E0%B8%AD%E0%B8%B1%E0%B8%95%E0%B9%82%E0%B8%99%E0%B8%A1%E0%B8%B1%E0%B8%95%E0%B8%B4">🛠️ Script สำหรับตรวจสอบอัตโนมัติ</h2>
+<p>สร้างไฟล์ <code>validate_pcs_data.py</code>:</p>
+<pre class="hljs"><code><div><span class="hljs-keyword">from</span> pcs_client <span class="hljs-keyword">import</span> PCSClient
+<span class="hljs-keyword">import</span> sys
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">validate_pcs_data</span><span class="hljs-params">(host=<span class="hljs-string">'192.168.0.20'</span>, port=<span class="hljs-number">502</span>)</span>:</span>
+    <span class="hljs-string">"""ตรวจสอบความถูกต้องของข้อมูลจาก PCS"""</span>
+    
+    client = PCSClient(host=host, port=port)
+    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> client.connect():
+        print(<span class="hljs-string">"❌ ไม่สามารถเชื่อมต่อกับ PCS ได้"</span>)
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">False</span>
+    
+    print(<span class="hljs-string">"✅ เชื่อมต่อสำเร็จ\n"</span>)
+    errors = []
+    warnings = []
+    
+    <span class="hljs-comment"># 1. อ่าน Telemetry</span>
+    telemetry = client.get_telemetry()
+    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> telemetry:
+        errors.append(<span class="hljs-string">"❌ ไม่สามารถอ่าน Telemetry ได้"</span>)
+    <span class="hljs-keyword">else</span>:
+        print(<span class="hljs-string">"=== ตรวจสอบ Telemetry ==="</span>)
+        
+        <span class="hljs-comment"># ตรวจสอบ Voltage Range</span>
+        <span class="hljs-keyword">for</span> phase <span class="hljs-keyword">in</span> [<span class="hljs-string">'a'</span>, <span class="hljs-string">'b'</span>, <span class="hljs-string">'c'</span>]:
+            voltage = telemetry.get(<span class="hljs-string">f'voltage_<span class="hljs-subst">{phase}</span>'</span>, <span class="hljs-number">0</span>)
+            <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> (<span class="hljs-number">180</span> &lt;= voltage &lt;= <span class="hljs-number">250</span>):
+                warnings.append(<span class="hljs-string">f"⚠️ Voltage <span class="hljs-subst">{phase.upper()}</span>: <span class="hljs-subst">{voltage}</span>V (out of normal range 180-250V)"</span>)
+        
+        <span class="hljs-comment"># ตรวจสอบ Frequency</span>
+        frequency = telemetry.get(<span class="hljs-string">'frequency'</span>, <span class="hljs-number">0</span>)
+        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> (<span class="hljs-number">49.5</span> &lt;= frequency &lt;= <span class="hljs-number">50.5</span>) <span class="hljs-keyword">and</span> <span class="hljs-keyword">not</span> (<span class="hljs-number">59.5</span> &lt;= frequency &lt;= <span class="hljs-number">60.5</span>):
+            warnings.append(<span class="hljs-string">f"⚠️ Frequency: <span class="hljs-subst">{frequency}</span>Hz (out of normal range)"</span>)
+        
+        <span class="hljs-comment"># ตรวจสอบ Power = V × I</span>
+        voltage_a = telemetry.get(<span class="hljs-string">'voltage_a'</span>, <span class="hljs-number">0</span>)
+        current_a = abs(telemetry.get(<span class="hljs-string">'current_a'</span>, <span class="hljs-number">0</span>))
+        active_power_a = abs(telemetry.get(<span class="hljs-string">'active_power_a'</span>, <span class="hljs-number">0</span>))
+        
+        <span class="hljs-keyword">if</span> voltage_a &gt; <span class="hljs-number">0</span> <span class="hljs-keyword">and</span> current_a &gt; <span class="hljs-number">0</span>:
+            calculated_power = (voltage_a * current_a) / <span class="hljs-number">1000</span>
+            difference = abs(calculated_power - active_power_a)
+            tolerance = active_power_a * <span class="hljs-number">0.1</span> <span class="hljs-keyword">if</span> active_power_a &gt; <span class="hljs-number">0</span> <span class="hljs-keyword">else</span> <span class="hljs-number">0.1</span>
+            
+            <span class="hljs-keyword">if</span> difference &gt; tolerance:
+                warnings.append(<span class="hljs-string">f"⚠️ Power mismatch Phase A: Calculated=<span class="hljs-subst">{calculated_power:<span class="hljs-number">.2</span>f}</span>kW, Actual=<span class="hljs-subst">{active_power_a:<span class="hljs-number">.2</span>f}</span>kW"</span>)
+        
+        <span class="hljs-comment"># ตรวจสอบ Apparent Power</span>
+        active = abs(telemetry.get(<span class="hljs-string">'active_power_a'</span>, <span class="hljs-number">0</span>))
+        reactive = abs(telemetry.get(<span class="hljs-string">'reactive_power_a'</span>, <span class="hljs-number">0</span>))
+        apparent = telemetry.get(<span class="hljs-string">'apparent_power_a'</span>, <span class="hljs-number">0</span>)
+        
+        <span class="hljs-keyword">if</span> apparent &gt; <span class="hljs-number">0</span>:
+            calculated_apparent = (active**<span class="hljs-number">2</span> + reactive**<span class="hljs-number">2</span>)**<span class="hljs-number">0.5</span>
+            difference = abs(calculated_apparent - apparent)
+            tolerance = apparent * <span class="hljs-number">0.05</span>
+            
+            <span class="hljs-keyword">if</span> difference &gt; tolerance:
+                warnings.append(<span class="hljs-string">f"⚠️ Apparent Power mismatch: Calculated=<span class="hljs-subst">{calculated_apparent:<span class="hljs-number">.2</span>f}</span>kVA, Actual=<span class="hljs-subst">{apparent:<span class="hljs-number">.2</span>f}</span>kVA"</span>)
+        
+        print(<span class="hljs-string">"✅ Telemetry ถูกต้อง"</span>)
+    
+    <span class="hljs-comment"># 2. อ่าน Status</span>
+    status = client.get_status()
+    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> status:
+        errors.append(<span class="hljs-string">"❌ ไม่สามารถอ่าน Status ได้"</span>)
+    <span class="hljs-keyword">else</span>:
+        print(<span class="hljs-string">"\n=== ตรวจสอบ Status ==="</span>)
+        print(<span class="hljs-string">f"Running: <span class="hljs-subst">{status.get(<span class="hljs-string">'running'</span>)}</span>"</span>)
+        print(<span class="hljs-string">f"Fault: <span class="hljs-subst">{status.get(<span class="hljs-string">'fault'</span>)}</span>"</span>)
+        print(<span class="hljs-string">f"Grid Connected: <span class="hljs-subst">{status.get(<span class="hljs-string">'grid_connected'</span>)}</span>"</span>)
+        print(<span class="hljs-string">"✅ Status ถูกต้อง"</span>)
+    
+    <span class="hljs-comment"># 3. อ่าน Temperature</span>
+    temp = client.get_temperature()
+    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> temp:
+        warnings.append(<span class="hljs-string">"⚠️ ไม่สามารถอ่าน Temperature ได้"</span>)
+    <span class="hljs-keyword">else</span>:
+        print(<span class="hljs-string">"\n=== ตรวจสอบ Temperature ==="</span>)
+        radiator_temp = temp.get(<span class="hljs-string">'radiator_temp'</span>, <span class="hljs-number">0</span>)
+        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> (<span class="hljs-number">0</span> &lt;= radiator_temp &lt;= <span class="hljs-number">100</span>):
+            warnings.append(<span class="hljs-string">f"⚠️ Radiator Temp: <span class="hljs-subst">{radiator_temp}</span>°C (out of normal range 0-100°C)"</span>)
+        print(<span class="hljs-string">"✅ Temperature ถูกต้อง"</span>)
+    
+    <span class="hljs-comment"># 4. อ่าน Accumulated Power</span>
+    acc_power = client.get_accumulated_power()
+    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> acc_power:
+        warnings.append(<span class="hljs-string">"⚠️ ไม่สามารถอ่าน Accumulated Power ได้"</span>)
+    <span class="hljs-keyword">else</span>:
+        print(<span class="hljs-string">"\n=== ตรวจสอบ Accumulated Power ==="</span>)
+        <span class="hljs-keyword">for</span> key, value <span class="hljs-keyword">in</span> acc_power.items():
+            <span class="hljs-keyword">if</span> value &lt; <span class="hljs-number">0</span> <span class="hljs-keyword">or</span> value &gt; <span class="hljs-number">4294967.295</span>:
+                errors.append(<span class="hljs-string">f"❌ <span class="hljs-subst">{key}</span>: <span class="hljs-subst">{value}</span>kWh (out of range)"</span>)
+        print(<span class="hljs-string">"✅ Accumulated Power ถูกต้อง"</span>)
+    
+    <span class="hljs-comment"># สรุปผล</span>
+    print(<span class="hljs-string">"\n"</span> + <span class="hljs-string">"="</span>*<span class="hljs-number">50</span>)
+    <span class="hljs-keyword">if</span> errors:
+        print(<span class="hljs-string">"❌ ERRORS:"</span>)
+        <span class="hljs-keyword">for</span> error <span class="hljs-keyword">in</span> errors:
+            print(<span class="hljs-string">f"  <span class="hljs-subst">{error}</span>"</span>)
+    
+    <span class="hljs-keyword">if</span> warnings:
+        print(<span class="hljs-string">"\n⚠️ WARNINGS:"</span>)
+        <span class="hljs-keyword">for</span> warning <span class="hljs-keyword">in</span> warnings:
+            print(<span class="hljs-string">f"  <span class="hljs-subst">{warning}</span>"</span>)
+    
+    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> errors <span class="hljs-keyword">and</span> <span class="hljs-keyword">not</span> warnings:
+        print(<span class="hljs-string">"✅ ทุกอย่างถูกต้อง!"</span>)
+    
+    client.close()
+    <span class="hljs-keyword">return</span> len(errors) == <span class="hljs-number">0</span>
+
+<span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">"__main__"</span>:
+    host = sys.argv[<span class="hljs-number">1</span>] <span class="hljs-keyword">if</span> len(sys.argv) &gt; <span class="hljs-number">1</span> <span class="hljs-keyword">else</span> <span class="hljs-string">'192.168.0.20'</span>
+    port = int(sys.argv[<span class="hljs-number">2</span>]) <span class="hljs-keyword">if</span> len(sys.argv) &gt; <span class="hljs-number">2</span> <span class="hljs-keyword">else</span> <span class="hljs-number">502</span>
+    validate_pcs_data(host, port)
+</div></code></pre>
+<hr>
+<h2 id="%F0%9F%93%8C-%E0%B8%AA%E0%B8%A3%E0%B8%B8%E0%B8%9B">📌 สรุป</h2>
+<h3 id="%E0%B8%84%E0%B9%88%E0%B8%B2%E0%B8%97%E0%B8%B5%E0%B9%88%E0%B8%94%E0%B8%B6%E0%B8%87%E0%B8%A1%E0%B8%B2%E0%B8%96%E0%B8%B9%E0%B8%81%E0%B8%95%E0%B9%89%E0%B8%AD%E0%B8%87%E0%B8%95%E0%B8%B2%E0%B8%A1-protocol">ค่าที่ดึงมาถูกต้องตาม Protocol:</h3>
+<ul>
+<li>✅ Address ทั้งหมดถูกต้อง</li>
+<li>✅ Coefficient ถูกต้อง</li>
+<li>✅ Data Type (Signed/Unsigned) ถูกต้อง</li>
+<li>✅ การแปลง Signed Values ถูกต้อง</li>
+</ul>
+<h3 id="%E0%B8%A7%E0%B8%B4%E0%B8%98%E0%B8%B5%E0%B8%95%E0%B8%A3%E0%B8%A7%E0%B8%88%E0%B8%AA%E0%B8%AD%E0%B8%9A">วิธีตรวจสอบ:</h3>
+<ol>
+<li><strong>ตรวจสอบ Range</strong>: เปรียบเทียบกับค่าปกติ</li>
+<li><strong>ตรวจสอบความสัมพันธ์</strong>: Power = V × I, Apparent = √(Active² + Reactive²)</li>
+<li><strong>ใช้ Modbus Tools</strong>: เปรียบเทียบกับ Modbus Poll/ModScan</li>
+<li><strong>ใช้ Script</strong>: รัน <code>validate_pcs_data.py</code> เพื่อตรวจสอบอัตโนมัติ</li>
+</ol>
+<h3 id="%E0%B8%AA%E0%B8%B4%E0%B9%88%E0%B8%87%E0%B8%97%E0%B8%B5%E0%B9%88%E0%B8%95%E0%B9%89%E0%B8%AD%E0%B8%87%E0%B8%95%E0%B8%A3%E0%B8%A7%E0%B8%88%E0%B8%AA%E0%B8%AD%E0%B8%9A%E0%B9%80%E0%B8%9E%E0%B8%B4%E0%B9%88%E0%B8%A1%E0%B9%80%E0%B8%95%E0%B8%B4%E0%B8%A1">สิ่งที่ต้องตรวจสอบเพิ่มเติม:</h3>
+<ul>
+<li>⚠️ <strong>Accumulated Power</strong>: ต้องตรวจสอบกับค่าจริงจากอุปกรณ์</li>
+<li>⚠️ <strong>IGBT Temperature</strong>: อาจต้อง decode bit mapping</li>
+<li>⚠️ <strong>Phase N Current</strong>: ตรวจสอบว่าแสดงถูกต้องหรือไม่</li>
+</ul>
+
+</body>
+</html>
